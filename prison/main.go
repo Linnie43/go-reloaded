@@ -5,7 +5,6 @@ import (
 	"go-reloaded/fixer"
 	"os"
 	"strings"
-	"unicode"
 )
 
 func main() {
@@ -17,52 +16,35 @@ func main() {
 	inputFile := args[1]
 	outputFile := args[2]
 
-	// Read file content
 	fileContent, err := os.ReadFile(inputFile)
 	if err != nil {
 		fmt.Println("Error reading file")
 		return
 	}
 
-	// Convert file content to string
 	content := string(fileContent)
-
-	// Loop through the content to find binary numbers followed by "(bin)"
 	updatedContent := content
+
 	for {
-		// Find the next occurrence of "(bin)"
 		index := strings.Index(updatedContent, "(bin)")
 		if index == -1 {
-			break // No more occurrences
+			break
 		}
 
-		// Find the binary number before "(bin)" (skip any spaces)
 		start := index - 1
-		for start >= 0 && unicode.IsSpace(rune(updatedContent[start])) {
-			start-- // Skip spaces between binary number and "(bin)"
-		}
-
-		// Now find the binary digits (0 and 1 only)
-		end := start
 		for start >= 0 && (updatedContent[start] == '0' || updatedContent[start] == '1') {
-			start-- // Move backwards to find the full binary number
+			start--
 		}
 
-		binaryStr := updatedContent[start+1 : end+1] // Extract the binary string
-
-		// Convert the binary string to decimal
+		binaryStr := updatedContent[start+1 : index]
 		decimalStr := fixer.BintoDecimal(binaryStr)
-
-		// Replace the binary number and "(bin)" with the decimal value
 		updatedContent = updatedContent[:start+1] + decimalStr + updatedContent[index+5:]
 	}
 
-	// Write the updated content to the output file
-	err = os.WriteFile(outputFile, []byte(updatedContent), 0644)
+	err = os.WriteFile(outputFile, fileContent, 0644)
 	if err != nil {
 		fmt.Println("Error writing to output file:", err)
 		return
 	}
-
 	fmt.Printf("Content successfully written to %s\n", outputFile)
 }
