@@ -2,11 +2,51 @@ package main
 
 import (
 	"fmt"
-	"go-reloaded/fixer"
 	"os"
+	"regexp"
+	"strconv"
 	"strings"
-	"unicode"
 )
+
+// Function to capitalize a word
+func Capitalize(word string) string {
+	if len(word) == 0 {
+		return word
+	}
+	return strings.ToUpper(string(word[0])) + strings.ToLower(word[1:])
+}
+
+// Function to uppercase a word
+func toUppercase(word string) string {
+	return strings.ToUpper(word)
+}
+
+// Function to lowercase a word
+func toLower(word string) string {
+	return strings.ToLower(word)
+}
+
+// Process words with a specified count
+func processWords(words []string, count int, transformFunc func(string) string) []string {
+	if count > len(words) {
+		count = len(words)
+	}
+	for i := len(words) - count; i < len(words); i++ {
+		if i >= 0 {
+			words[i] = transformFunc(words[i])
+		}
+	}
+	return words
+}
+
+// Function to convert hexadecimal to decimal
+func HextoDecimal(hexa string) string {
+	decimalValue, err := strconv.ParseInt(hexa, 16, 64)
+	if err != nil {
+		return "Invalid hexadecimal string"
+	}
+	return strconv.FormatInt(decimalValue, 10)
+}
 
 func main() {
 	args := os.Args
@@ -17,7 +57,7 @@ func main() {
 	inputFile := args[1]
 	outputFile := args[2]
 
-	// Read file content
+	// Read input file
 	fileContent, err := os.ReadFile(inputFile)
 	if err != nil {
 		fmt.Println("Error reading file")
@@ -27,35 +67,43 @@ func main() {
 	// Convert file content to string
 	content := string(fileContent)
 
-	// Loop through the content to find binary numbers followed by "(bin)"
-	updatedContent := content
-	for {
-		// Find the next occurrence of "(bin)"
-		index := strings.Index(updatedContent, "(bin)")
-		if index == -1 {
-			break // No more occurrences
+	// Regex pattern to find custom markers
+	customRe := regexp.MustCompile(`((?:\w+\s*)+)\s*\((cap|up|low)(?:,\s*(\d+))?\)`)
+
+	// Replace all occurrences of custom markers with their altered versions
+	updatedContent := customRe.ReplaceAllStringFunc(content, func(match string) string {
+		// Extract the words, marker, and optional number
+		submatches := customRe.FindStringSubmatch(match)
+		if len(submatches) < 3 {
+			return match
 		}
 
-		// Find the binary number before "(bin)" (skip any spaces)
-		start := index - 1
-		for start >= 0 && unicode.IsSpace(rune(updatedContent[start])) {
-			start-- // Skip spaces between binary number and "(bin)"
+		// Extract the words, marker, and optional number
+		wordsStr := submatches[1]
+		marker := submatches[2]
+		num := 0
+		if len(submatches) == 4 {
+			num, _ = strconv.Atoi(submatches[3])
 		}
 
-		// Now find the binary digits (0 and 1 only)
-		end := start
-		for start >= 0 && (updatedContent[start] == '0' || updatedContent[start] == '1') {
-			start-- // Move backwards to find the full binary number
+		// Split the words into a slice
+		words := strings.Fields(wordsStr)
+		var transformedWords []string
+
+		// Process the words based on the marker
+		switch marker {
+		case "cap":
+			transformedWords = processWords(words, num, Capitalize)
+		case "up":
+			transformedWords = processWords(words, num, toUppercase)
+		case "low":
+			transformedWords = processWords(words, num, toLower)
+		default:
+			transformedWords = words
 		}
 
-		binaryStr := updatedContent[start+1 : end+1] // Extract the binary string
-
-		// Convert the binary string to decimal
-		decimalStr := fixer.BintoDecimal(binaryStr)
-
-		// Replace the binary number and "(bin)" with the decimal value
-		updatedContent = updatedContent[:start+1] + decimalStr + updatedContent[index+5:]
-	}
+		return strings.Join(transformedWords, " ")
+	})
 
 	// Write the updated content to the output file
 	err = os.WriteFile(outputFile, []byte(updatedContent), 0644)
