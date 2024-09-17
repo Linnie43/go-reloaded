@@ -1,5 +1,0 @@
-package fixer
-
-func HextoDecimal() {
-
-}
