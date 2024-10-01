@@ -8,7 +8,6 @@ import (
 	"strings"
 )
 
-// Function to capitalize a word
 func Capitalize(word string) string {
 	if len(word) == 0 {
 		return word
@@ -16,17 +15,22 @@ func Capitalize(word string) string {
 	return strings.ToUpper(string(word[0])) + strings.ToLower(word[1:])
 }
 
-// Function to uppercase a word
 func toUppercase(word string) string {
 	return strings.ToUpper(word)
 }
 
-// Function to lowercase a word
 func toLower(word string) string {
 	return strings.ToLower(word)
 }
 
-// Process words with a specified count
+func BintoDecimal(a string) string {
+	decimalValue, err := strconv.ParseInt(a, 2, 64)
+	if err != nil {
+		return "Invalid"
+	}
+	return strconv.Itoa(int(decimalValue))
+}
+
 func processWords(words []string, count int, transformFunc func(string) string) []string {
 	if count > len(words) {
 		count = len(words)
@@ -37,15 +41,6 @@ func processWords(words []string, count int, transformFunc func(string) string) 
 		}
 	}
 	return words
-}
-
-// Function to convert hexadecimal to decimal
-func HextoDecimal(hexa string) string {
-	decimalValue, err := strconv.ParseInt(hexa, 16, 64)
-	if err != nil {
-		return "Invalid hexadecimal string"
-	}
-	return strconv.FormatInt(decimalValue, 10)
 }
 
 func main() {
