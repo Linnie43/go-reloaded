@@ -23,6 +23,8 @@ This tool can:
 
 ## Usage
 
+You will have to provide some input files for this.
+
 ```bash
 $ go run . input.txt output.txt
 ```
